@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -32,14 +31,8 @@ func (d *Day2) Puzzle1() (any, error) {
 		rowLen := len(row)
 
 		for j := 1; j < rowLen; j++ {
-			a, errA := utils.ParseInt8(row[j])
-			b, errB := utils.ParseInt8(row[j-1])
-			if errA != nil {
-				return nil, errA
-			}
-			if errB != nil {
-				return nil, errB
-			}
+			a := utils.ParseInt8(row[j])
+			b := utils.ParseInt8(row[j-1])
 
 			delta := a - b
 
@@ -78,21 +71,63 @@ func (d *Day2) Puzzle2() (any, error) {
 
 	for i := 0; i < len(rows); i++ {
 		row := strings.Fields(rows[i])
-		rowLen := len(row)
-		deltaArr := make([]int8, rowLen)
 
-		for j := 1; j < rowLen; j++ {
-			a, _ := utils.ParseInt8(row[j])
-			b, _ := utils.ParseInt8(row[j-1])
-
-			delta := a - b
-
-			deltaArr[j] = delta
+		failIndex := findUnsafeIndex(row)
+		if failIndex == -1 {
+			safeRows++
+			continue
 		}
 
-		fmt.Printf("%v\n", deltaArr)
+		// bruteforce, man manam inputam distance starp kļūdas punktu un maināmo elementu lai būtu ok varēja būt > 3, šā vai tā sanāktu bruteforce
+		isSafe := false
+		for j := 0; j < len(row); j++ {
+			res := append(make([]string, 0, len(row)-1), row[:j]...)
+			res = append(res, row[j+1:]...)
 
+			if findUnsafeIndex(res) == -1 {
+				isSafe = true
+				break
+			}
+		}
+
+		if isSafe {
+			safeRows++
+		}
 	}
 
 	return safeRows, nil
+}
+
+func findUnsafeIndex(row []string) int {
+	rowLen := len(row)
+	if rowLen < 2 {
+		return -1
+	}
+
+	dir := utils.ParseInt8(row[1]) > utils.ParseInt8(row[0])
+
+	for i := 1; i < rowLen; i++ {
+		a := utils.ParseInt8(row[i])
+		b := utils.ParseInt8(row[i-1])
+
+		delta := a - b
+
+		if dir && delta < 0 {
+			return i
+		} else if !dir && (delta > 0) {
+			return i - 1
+		} else if delta == 0 {
+			return i
+		}
+
+		if delta < 0 {
+			delta = -delta
+		}
+
+		if delta < 1 || delta > 3 {
+			return i
+		}
+	}
+
+	return -1
 }
