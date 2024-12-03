@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	s "strings"
+
+	"github.com/borderss/aoc-2024/utils"
 )
 
 type Day1 struct {
@@ -21,27 +23,9 @@ func (d *Day1) Init() error {
 	return nil
 }
 
-type IntHeap []int
-
-func (h IntHeap) Len() int           { return len(h) }
-func (h IntHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h IntHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-
-func (h *IntHeap) Push(x any) {
-	*h = append(*h, x.(int))
-}
-
-func (h *IntHeap) Pop() any {
-	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[0 : n-1]
-	return x
-}
-
 func (d *Day1) Puzzle1() (any, error) {
-	var heap1 IntHeap
-	var heap2 IntHeap
+	var heap1 utils.IntHeap
+	var heap2 utils.IntHeap
 	var sum int
 
 	heap.Init(&heap1)
