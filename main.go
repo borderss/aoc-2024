@@ -11,6 +11,5 @@ func main() {
 
 	fmt.Printf("running task: %T \n", *task)
 	task.Init()
-	tasks.RunTaskPart1(task)
-	// tasks.RunTaskTimedAverage(task, 1000)
+	tasks.RunTaskTimedPart2(task)
 }

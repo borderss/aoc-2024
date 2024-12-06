@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
@@ -31,57 +30,46 @@ func (d *Day6) Puzzle1() (any, error) {
 	mapHeight := len(mapData)
 	mapWidth := len(mapData[0])
 
-	guardCoordinates := make([]int, 2)
+	guardLocation := Location{}
 	for y := 0; y < mapHeight; y++ {
 		for x := 0; x < mapWidth; x++ {
 			if mapData[y][x] == 94 {
-				guardCoordinates = []int{x, y}
+				guardLocation = Location{[]int{x, y}, []int{0, -1}}
 			}
 		}
 	}
 
-	obstaclesCoordinates := make([][]int, 0)
-	for y := 0; y < mapHeight; y++ {
-		for x := 0; x < mapWidth; x++ {
-			if mapData[y][x] == 35 {
-				obstaclesCoordinates = append(obstaclesCoordinates, []int{x, y})
-			}
-		}
-	}
-
-	guardDirection := []int{0, -1}
-	visitedLocations := make([][]int, 0)
-	visitedLocations = append(visitedLocations, guardCoordinates)
+	visitedCoordinates := make([]Location, 0)
+	visitedCoordinates = append(visitedCoordinates, guardLocation)
 
 	validMove := true
 	for validMove {
-		newGuardCoordinates, outOfBounds := moveGuard(mapWidth, mapHeight, guardCoordinates, guardDirection)
-		fmt.Println(newGuardCoordinates, outOfBounds)
+		newGuardLocation, outOfBounds := moveGuard(mapWidth, mapHeight, guardLocation)
 
 		if outOfBounds {
 			validMove = false
 			continue
 		}
 
-		if mapData[newGuardCoordinates[1]][newGuardCoordinates[0]] == 35 {
-			if guardDirection[0] == 0 && guardDirection[1] == -1 {
-				guardDirection = []int{1, 0}
-			} else if guardDirection[0] == 1 && guardDirection[1] == 0 {
-				guardDirection = []int{0, 1}
-			} else if guardDirection[0] == 0 && guardDirection[1] == 1 {
-				guardDirection = []int{-1, 0}
-			} else if guardDirection[0] == -1 && guardDirection[1] == 0 {
-				guardDirection = []int{0, -1}
+		if mapData[newGuardLocation.Coordinate[1]][newGuardLocation.Coordinate[0]] == 35 {
+			if guardLocation.Direction[0] == 0 && guardLocation.Direction[1] == -1 {
+				guardLocation.Direction = []int{1, 0}
+			} else if guardLocation.Direction[0] == 1 && guardLocation.Direction[1] == 0 {
+				guardLocation.Direction = []int{0, 1}
+			} else if guardLocation.Direction[0] == 0 && guardLocation.Direction[1] == 1 {
+				guardLocation.Direction = []int{-1, 0}
+			} else if guardLocation.Direction[0] == -1 && guardLocation.Direction[1] == 0 {
+				guardLocation.Direction = []int{0, -1}
 			}
 
 			continue
 		}
 
-		visitedLocations = appendIfUnique(visitedLocations, newGuardCoordinates)
-		guardCoordinates = newGuardCoordinates
+		visitedCoordinates = appendIfUniqueCoordinate(visitedCoordinates, newGuardLocation)
+		guardLocation = newGuardLocation
 	}
 
-	return len(visitedLocations), nil
+	return len(visitedCoordinates), nil
 }
 
 type Location struct {
@@ -90,106 +78,127 @@ type Location struct {
 }
 
 func (d *Day6) Puzzle2() (any, error) {
+	// pilnīga miskaste; netaisos šo labot.
+
 	rows := strings.Split(d.data, "\n")
 
 	mapData := make([][]rune, len(rows))
-	for i, row := range rows {
-		mapData[i] = []rune(row)
+	guard := Guard{
+		directions: [4][2]int{{0, -1}, {1, 0}, {0, 1}, {-1, 0}},
 	}
 
-	mapHeight := len(mapData)
-	mapWidth := len(mapData[0])
-
-	guardCoordinates := make([]int, 2)
-	for y := 0; y < mapHeight; y++ {
-		for x := 0; x < mapWidth; x++ {
-			if mapData[y][x] == 94 {
-				guardCoordinates = []int{x, y}
+	for y, row := range rows {
+		mapData[y] = make([]rune, len(row))
+		for x, cell := range row {
+			switch cell {
+			case 94:
+				guard.x = x
+				guard.y = y
+				mapData[y][x] = 46
+			default:
+				mapData[y][x] = cell
 			}
 		}
 	}
 
-	obstaclesCoordinates := make([][]int, 0)
-	for y := 0; y < mapHeight; y++ {
-		for x := 0; x < mapWidth; x++ {
-			if mapData[y][x] == 35 {
-				obstaclesCoordinates = append(obstaclesCoordinates, []int{x, y})
+	originalGuard := guard
+
+	mapDataCopy := make([][]rune, len(mapData))
+	for i := range mapDataCopy {
+		mapDataCopy[i] = make([]rune, len(mapData[i]))
+		copy(mapDataCopy[i], mapData[i])
+	}
+
+	for inBounds(guard.x, guard.y, mapData) {
+		newX, newY := guard.nextPosition()
+
+		if !inBounds(newX, newY, mapData) {
+			guard.moveForward()
+		} else if mapData[newY][newX] == 35 {
+			guard.turnRight()
+		} else {
+			mapData[newY][newX] = 35
+			if mapDataCopy[newY][newX] != 88 && causesLoop(originalGuard, mapData) {
+				mapDataCopy[newY][newX] = 88
+			}
+			mapData[newY][newX] = 46
+			guard.moveForward()
+		}
+	}
+
+	sum := 0
+	for y := range mapDataCopy {
+		for x := range mapDataCopy[y] {
+			if mapDataCopy[y][x] == 88 {
+				sum++
 			}
 		}
 	}
 
-	guardDirection := []int{0, -1}
-
-	visitedLocations := make([]Location, 0)
-	visitedLocations = append(visitedLocations, Location{guardCoordinates, guardDirection})
-
-	isInInfiniteLoop := false
-
-	validMove := true
-	for validMove {
-		newGuardCoordinates, outOfBounds := moveGuard(mapWidth, mapHeight, guardCoordinates, guardDirection)
-		fmt.Println(newGuardCoordinates, outOfBounds)
-
-		if outOfBounds {
-			validMove = false
-			continue
-		}
-
-		if mapData[newGuardCoordinates[1]][newGuardCoordinates[0]] == 35 {
-			if guardDirection[0] == 0 && guardDirection[1] == -1 {
-				guardDirection = []int{1, 0}
-			} else if guardDirection[0] == 1 && guardDirection[1] == 0 {
-				guardDirection = []int{0, 1}
-			} else if guardDirection[0] == 0 && guardDirection[1] == 1 {
-				guardDirection = []int{-1, 0}
-			} else if guardDirection[0] == -1 && guardDirection[1] == 0 {
-				guardDirection = []int{0, -1}
-			}
-
-			continue
-		}
-
-		if !isInInfiniteLoop {
-			for i, loc := range visitedLocations {
-				if loc.Coordinate[0] == newGuardCoordinates[0] && loc.Coordinate[1] == newGuardCoordinates[1] {
-					isInInfiniteLoop = true
-					visitedLocations = visitedLocations[:i]
-					break
-				}
-			}
-		}
-
-		visitedLocations = appendIfUnique(visitedLocations, Location{newGuardCoordinates, guardDirection})
-		guardCoordinates = newGuardCoordinates
-	}
-
-	return len(visitedLocations), nil
+	return sum, nil
 }
 
-func moveGuard(mapx int, mapy int, guardCoordinates []int, guardDirection []int) ([]int, bool) {
-	newX := guardCoordinates[0] + guardDirection[0]
-	newY := guardCoordinates[1] + guardDirection[1]
-
-	if isOutOfBounds(mapx, mapy, []int{newX, newY}) {
-		return guardCoordinates, true
-	}
-
-	return []int{newX, newY}, false
+type Guard struct {
+	x, y       int
+	dirIndex   int
+	directions [4][2]int
 }
 
-func isOutOfBounds(mapX int, mapY int, coords []int) bool {
-	if coords[0] < 0 || coords[0] >= mapX {
-		return true
-	}
+func (g *Guard) nextPosition() (int, int) {
+	return g.x + g.directions[g.dirIndex][0], g.y + g.directions[g.dirIndex][1]
+}
 
-	if coords[1] < 0 || coords[1] >= mapY {
-		return true
+func (g *Guard) turnRight() {
+	g.dirIndex = (g.dirIndex + 1) % 4
+}
+
+func (g *Guard) moveForward() {
+	g.x, g.y = g.nextPosition()
+}
+
+func inBounds(x, y int, grid [][]rune) bool {
+	return x >= 0 && x < len(grid[0]) && y >= 0 && y < len(grid)
+}
+
+func causesLoop(g Guard, grid [][]rune) bool {
+	clone := g
+	walls := map[[3]int]struct{}{}
+
+	for inBounds(clone.x, clone.y, grid) {
+		newX, newY := clone.nextPosition()
+
+		if !inBounds(newX, newY, grid) {
+			clone.moveForward()
+		} else if grid[newY][newX] == 35 {
+			wallKey := [3]int{newX, newY, clone.dirIndex}
+			if _, exists := walls[wallKey]; exists {
+				return true
+			}
+			walls[wallKey] = struct{}{}
+			clone.turnRight()
+		} else {
+			clone.moveForward()
+		}
 	}
 
 	return false
 }
 
-func appendIfUnique(slice []Location, element Location) []Location {
+func moveGuard(mapx int, mapy int, location Location) (Location, bool) {
+	newX := location.Coordinate[0] + location.Direction[0]
+	newY := location.Coordinate[1] + location.Direction[1]
+
+	if newX < 0 || newX >= mapx || newY < 0 || newY >= mapy {
+		return location, true
+	}
+
+	return Location{
+		Coordinate: []int{newX, newY},
+		Direction:  location.Direction,
+	}, false
+}
+
+func appendIfUniqueCoordinate(slice []Location, element Location) []Location {
 	for _, ele := range slice {
 		if ele.Coordinate[0] == element.Coordinate[0] && ele.Coordinate[1] == element.Coordinate[1] {
 			return slice
