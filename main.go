@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-	task := &tasks.Day4{}
+	task := &tasks.Day5{}
 
 	fmt.Printf("running task: %T \n", *task)
 	task.Init()
+	// tasks.RunTaskPart2(task)
 	tasks.RunTaskTimedAverage(task, 1000)
 }
