@@ -1,10 +1,11 @@
 package tasks
 
 import (
-	"container/heap"
 	"os"
 	"strconv"
-	s "strings"
+	"strings"
+
+	"slices"
 
 	"github.com/borderss/aoc-2024/utils"
 )
@@ -24,28 +25,28 @@ func (d *Day1) Init() error {
 }
 
 func (d *Day1) Puzzle1() (any, error) {
-	var heap1 utils.IntHeap
-	var heap2 utils.IntHeap
-	var sum int
+	data := strings.ReplaceAll(d.data, "\n", ",")
+	data = strings.ReplaceAll(data, "   ", ",")
+	arr := strings.Split(data, ",")
 
-	heap.Init(&heap1)
-	heap.Init(&heap2)
+	even := make([]int32, 0, 1000)
+	odd := make([]int32, 0, 1000)
 
-	d.data = s.ReplaceAll(d.data, "\n", ",")
-	d.data = s.ReplaceAll(d.data, "   ", ",")
-	arr := s.Split(d.data, ",")
-	for i := 0; i < len(arr); i++ {
+	for i, v := range arr {
+		val := utils.ParseInt[int32](v)
 		if i%2 == 0 {
-			val, _ := strconv.Atoi(arr[i])
-			heap.Push(&heap1, val)
+			even = append(even, val)
 		} else {
-			val, _ := strconv.Atoi(arr[i])
-			heap.Push(&heap2, val)
+			odd = append(odd, val)
 		}
 	}
 
-	for heap1.Len() > 0 {
-		s := heap.Pop(&heap1).(int) - heap.Pop(&heap2).(int)
+	slices.Sort(even)
+	slices.Sort(odd)
+
+	var sum int32
+	for i := range even {
+		s := even[i] - odd[i]
 		if s < 0 {
 			s = -s
 		}
@@ -58,9 +59,9 @@ func (d *Day1) Puzzle1() (any, error) {
 func (d *Day1) Puzzle2() (any, error) {
 	var arr1, arr2 []int
 
-	d.data = s.ReplaceAll(d.data, "\n", ",")
-	d.data = s.ReplaceAll(d.data, "   ", ",")
-	arr := s.Split(d.data, ",")
+	d.data = strings.ReplaceAll(d.data, "\n", ",")
+	d.data = strings.ReplaceAll(d.data, "   ", ",")
+	arr := strings.Split(d.data, ",")
 	for i := 0; i < len(arr); i++ {
 		if i%2 == 0 {
 			val, _ := strconv.Atoi(arr[i])
