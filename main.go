@@ -7,9 +7,9 @@ import (
 )
 
 func main() {
-	task := &tasks.Day7{}
+	task := &tasks.Day8{}
 
 	fmt.Printf("running task: %T \n", *task)
 	task.Init()
-	tasks.RunTaskTimedPart1(task)
+	tasks.RunTaskTimedPart2(task)
 }
