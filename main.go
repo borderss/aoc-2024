@@ -11,5 +11,5 @@ func main() {
 
 	fmt.Printf("running task: %T \n", *task)
 	task.Init()
-	tasks.RunTaskTimedPart1(task)
+	tasks.RunTaskTimedPart2(task)
 }
