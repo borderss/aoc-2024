@@ -3,6 +3,8 @@ package tasks
 import (
 	"fmt"
 	"os"
+
+	"github.com/borderss/aoc-2024/utils"
 )
 
 type Day9 struct {
@@ -38,19 +40,6 @@ func (d *Day9) Puzzle1() (any, error) {
 		}
 	}
 
-	// fragementedString = [[0        ] [. .       ] [1 1 1      ] [. . . .     ] [2 2 2 2 2    ]]
-	// flattened = "0...111.....22222"
-
-	// iterate over the fragments, move the last data blocks to the first available free space ('.'), like this:
-	// 0..111....22222
-	// 02.111....2222.
-	// 022111....222..
-	// 0221112...22...
-	// 02211122..2....
-	// 022111222......
-
-	fmt.Println(fragmentedString)
-
 	tempFragmentedString := fragmentedString
 
 	for i := len(tempFragmentedString) - 1; i >= 0; i-- {
@@ -73,31 +62,23 @@ func (d *Day9) Puzzle1() (any, error) {
 		}
 	}
 
-	fmt.Println(fragmentedString)
-
-	var flattened string
-	for _, v := range fragmentedString {
-		for _, vv := range v {
-			if vv == "." || vv == "" {
+	var flattenedArray []string
+	for i := 0; i < len(fragmentedString); i++ {
+		for j := 0; j < len(fragmentedString[i]); j++ {
+			if fragmentedString[i][j] == "." {
 				continue
 			}
-			flattened += vv
+
+			flattenedArray = append(flattenedArray, fragmentedString[i][j])
 		}
 	}
 
 	var sum int64
-	for i := 0; i < len(flattened); i++ {
-		sum += int64(int64(i) * int64(flattened[i]-48))
+	for i := 0; i < len(flattenedArray); i++ {
+		sum += int64(i) * utils.ParseInt[int64](flattenedArray[i])
 	}
 
 	return sum, nil
-}
-
-func move(s string, from, to int) string {
-	runes := []rune(s)
-	runes[to] = runes[from]
-	runes[from] = '.'
-	return string(runes)
 }
 
 func (d *Day9) Puzzle2() (any, error) {
