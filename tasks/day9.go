@@ -20,20 +20,18 @@ func (d *Day9) Init() error {
 }
 
 func (d *Day9) Puzzle1() (any, error) {
-	// 12345
-	fragmentedString := make([][9]string, len(d.data))
+	fragmentedString := make([][]string, len(d.data))
 
-	for i, v := range d.data {
+	for i := 0; i < len(d.data); i++ {
 		if i%2 == 0 {
-			var values [9]string
-			for j := 0; j < int(v-48); j++ {
+			values := make([]string, int(d.data[i]-48))
+			for j := 0; j < int(d.data[i]-48); j++ {
 				values[j] = fmt.Sprintf("%d", i/2)
 			}
-
 			fragmentedString[i] = values
 		} else {
-			var values [9]string
-			for j := 0; j < int(v-48); j++ {
+			values := make([]string, int(d.data[i]-48))
+			for j := 0; j < int(d.data[i]-48); j++ {
 				values[j] = "."
 			}
 			fragmentedString[i] = values
@@ -51,28 +49,31 @@ func (d *Day9) Puzzle1() (any, error) {
 	// 02211122..2....
 	// 022111222......
 
+	fmt.Println(fragmentedString)
+
 	tempFragmentedString := fragmentedString
 
-	for i := len(tempFragmentedString); i > 0; i-- {
-		for j := len(tempFragmentedString[i]); j > 0; j-- {
-			if tempFragmentedString[i-1][j-1] == "" {
+	for i := len(tempFragmentedString) - 1; i >= 0; i-- {
+		for j := len(tempFragmentedString[i]) - 1; j >= 0; j-- {
+			if tempFragmentedString[i][j] == "" || tempFragmentedString[i][j] == "." {
 				continue
 			}
 
-			if tempFragmentedString[i-1][j-1] == "." {
-				continue
-			}
-
-			for k := 0; k < len(fragmentedString); k++ {
+			found := false
+			for k := 0; k < len(fragmentedString) && !found; k++ {
 				for l := 0; l < len(fragmentedString[k]); l++ {
 					if fragmentedString[k][l] == "." {
-						fragmentedString[k][l] = fragmentedString[i-1][j-1]
-						fragmentedString[i-1][j-1] = "."
+						fragmentedString[k][l] = tempFragmentedString[i][j]
+						tempFragmentedString[i][j] = "."
+						found = true
+						break
 					}
 				}
 			}
 		}
 	}
+
+	fmt.Println(fragmentedString)
 
 	var flattened string
 	for _, v := range fragmentedString {
